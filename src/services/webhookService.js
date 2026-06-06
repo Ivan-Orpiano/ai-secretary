@@ -1,244 +1,123 @@
 
-import { fileToBase64, formatFileSize } from '../utils/fileUtils';
-
-/** Base webhook URL */
-const WEBHOOK_BASE_URL =
+const WEBHOOK_URL =
   'https://vanvanproject.app.n8n.cloud/webhook-test/fee2e2ba-dd83-4fe9-9757-cc9ea6ae4bb1';
 
-/** Request timeout in milliseconds */
-const REQUEST_TIMEOUT_MS = 30000;
-
-/** App identifier sent with every request */
-const APP_SOURCE = 'ai-secretary-assistant-v1';
-
-// ─────────────────────────────────────────────
-// Request Builder
-// ─────────────────────────────────────────────
-
-/**
- * Encodes all file metadata (including base64 content) into
- * a serializable array for URL parameter transmission.
- * @param {File[]} files
- * @returns {Promise<Object[]>}
- */
-async function encodeFiles(files) {
-  if (!files || files.length === 0) return [];
-
-  const encoded = await Promise.all(
-    files.map(async (file) => {
-      let base64 = null;
-      try {
-        base64 = await fileToBase64(file);
-      } catch {
-        // Non-fatal: proceed without base64 if read fails
-        base64 = null;
-      }
-      return {
-        name:          file.name,
-        type:          file.type,
-        size:          file.size,
-        sizeFormatted: formatFileSize(file.size),
-        lastModified:  file.lastModified,
-        base64,
-      };
-    })
-  );
-
-  return encoded;
-}
-
-/**
- * Builds the URLSearchParams object for the GET request.
- * @param {string} message
- * @param {File[]} files
- * @param {string} sessionId
- * @param {Object[]} encodedFiles
- * @returns {URLSearchParams}
- */
-function buildParams(message, files, sessionId, encodedFiles) {
-  return new URLSearchParams({
-    message:       message.trim(),
-    sessionId,
-    timestamp:     new Date().toISOString(),
-    source:        APP_SOURCE,
-    fileCount:     files.length,
-    fileNames:     files.map((f) => f.name).join(', '),
-    fileTypes:     files.map((f) => f.type).join(', '),
-    fileMetadata:  JSON.stringify(encodedFiles),
+/* ── Helper: read a File as base64 ───────────────────────────────── */
+const readFileAsBase64 = (file) =>
+  new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload  = () => resolve(reader.result.split(',')[1]);
+    reader.onerror = () => reject(new Error('Failed to read file'));
+    reader.readAsDataURL(file);
   });
-}
 
-// ─────────────────────────────────────────────
-// Response Parser
-// ─────────────────────────────────────────────
+/* ── Helper: safe JSON parse ─────────────────────────────────────── */
+const tryParseJSON = (text) => {
+  try   { return JSON.parse(text); }
+  catch { return null; }
+};
 
+/* ── Main send function ──────────────────────────────────────────── */
 /**
- * Extracts the AI reply text from various possible n8n
- * response shapes. Tries multiple known field names before
- * falling back to a default success message.
- * @param {any} data - Parsed JSON or raw text from webhook
- * @returns {string}
- */
-function extractReply(data) {
-  if (!data) {
-    return '✅ Your message was received successfully.';
-  }
-
-  // Common n8n response field names
-  const candidates = [
-    data?.output,
-    data?.response,
-    data?.message,
-    data?.text,
-    data?.reply,
-    data?.answer,
-    data?.result,
-    data?.content,
-    data?.data?.message,
-    data?.data?.response,
-    data?.data?.output,
-  ];
-
-  for (const candidate of candidates) {
-    if (typeof candidate === 'string' && candidate.trim()) {
-      return candidate.trim();
-    }
-  }
-
-  // If data itself is a non-empty string
-  if (typeof data === 'string' && data.trim()) {
-    return data.trim();
-  }
-
-  // Last resort: stringify a small object
-  if (typeof data === 'object') {
-    const str = JSON.stringify(data);
-    if (str && str !== '{}' && str !== '[]') {
-      return `✅ Webhook responded: ${str.slice(0, 200)}`;
-    }
-  }
-
-  return '✅ Your message was received and processed successfully.';
-}
-
-/**
- * Parses the raw fetch Response into a structured reply string.
- * Handles JSON and plain-text responses gracefully.
- * @param {Response} response
- * @returns {Promise<string>}
- */
-async function parseResponse(response) {
-  const contentType = response.headers.get('content-type') || '';
-
-  if (contentType.includes('application/json')) {
-    try {
-      const json = await response.json();
-      return extractReply(json);
-    } catch {
-      return '✅ Message received (could not parse JSON response).';
-    }
-  }
-
-  // Plain text or HTML fallback
-  try {
-    const text = await response.text();
-    return extractReply(text);
-  } catch {
-    return '✅ Message received.';
-  }
-}
-
-// ─────────────────────────────────────────────
-// Error Normalizer
-// ─────────────────────────────────────────────
-
-/**
- * Converts any caught error into a user-friendly string.
- * @param {unknown} err
- * @returns {string}
- */
-function normalizeError(err) {
-  if (!err) return 'An unknown error occurred.';
-
-  if (err.name === 'AbortError') {
-    return 'Request timed out. Please check your connection and try again.';
-  }
-
-  if (err.message?.toLowerCase().includes('failed to fetch') ||
-      err.message?.toLowerCase().includes('networkerror') ||
-      err.message?.toLowerCase().includes('network request failed')) {
-    return 'Network error — unable to reach the assistant. Check your internet connection.';
-  }
-
-  if (err.message) return err.message;
-
-  return 'Something went wrong. Please try again.';
-}
-
-// ─────────────────────────────────────────────
-// Public API
-// ─────────────────────────────────────────────
-
-/**
- * Sends a message (and optional files) to the n8n webhook.
+ * Sends message + optional file attachments to the n8n webhook.
  *
- * @param {string}   message   - The user's text message
- * @param {File[]}   files     - Array of File objects (may be empty)
- * @param {string}   sessionId - Unique conversation/session identifier
- * @returns {Promise<string>}  - The AI's reply text
- * @throws {Error}             - On network failure or non-OK HTTP status
+ * @param {Object} payload
+ * @param {string}   payload.message   - The user's text message
+ * @param {File[]}   payload.files     - Array of File objects (optional)
+ * @param {string}   payload.sessionId - Unique session identifier
+ * @returns {Promise<{ reply: string, raw: any }>}
  */
-export async function sendToWebhook(message, files = [], sessionId = 'default') {
-  const controller = new AbortController();
-  const timeoutId  = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
+export const sendToWebhook = async ({ message = '', files = [], sessionId }) => {
+  /* Build query params */
+  const params = new URLSearchParams();
 
-  try {
-    // 1. Encode files (base64)
-    const encodedFiles = await encodeFiles(files);
+  params.append('message',    message.trim());
+  params.append('sessionId',  sessionId || 'default');
+  params.append('timestamp',  new Date().toISOString());
+  params.append('source',     'aria-chatbot');
 
-    // 2. Build query params
-    const params = buildParams(message, files, sessionId, encodedFiles);
-    const url    = `${WEBHOOK_BASE_URL}?${params.toString()}`;
+  /* Attach file metadata (and base64 for small files ≤ 1 MB) */
+  if (files && files.length > 0) {
+    params.append('fileCount', String(files.length));
 
-    // 3. Fire GET request
-    const response = await fetch(url, {
-      method:  'GET',
-      headers: { Accept: 'application/json, text/plain, */*' },
-      signal:  controller.signal,
-    });
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i];
+      params.append(`file${i}_name`,    file.name);
+      params.append(`file${i}_type`,    file.type || 'application/octet-stream');
+      params.append(`file${i}_size`,    String(file.size));
+      params.append(`file${i}_lastMod`, String(file.lastModified));
 
-    // 4. Check HTTP status
-    if (!response.ok) {
-      throw new Error(
-        `Webhook returned HTTP ${response.status} (${response.statusText || 'error'}). ` +
-        `Please check the n8n workflow is active.`
-      );
+      /* Inline base64 only for small files to keep the URL manageable */
+      if (file.size <= 1_048_576) {
+        try {
+          const b64 = await readFileAsBase64(file);
+          params.append(`file${i}_data`, b64);
+        } catch {
+          params.append(`file${i}_data`, 'READ_ERROR');
+        }
+      } else {
+        params.append(`file${i}_data`, 'FILE_TOO_LARGE_FOR_GET');
+      }
     }
-
-    // 5. Parse and return the reply
-    return await parseResponse(response);
-
-  } catch (err) {
-    throw new Error(normalizeError(err));
-  } finally {
-    clearTimeout(timeoutId);
   }
-}
 
-/**
- * Health-checks the webhook with a minimal ping request.
- * Useful for testing connectivity on app load.
- * @returns {Promise<boolean>}
- */
-export async function pingWebhook() {
-  try {
-    const params = new URLSearchParams({ message: 'ping', source: APP_SOURCE, sessionId: 'health-check' });
-    const res    = await fetch(`${WEBHOOK_BASE_URL}?${params}`, {
-      method:  'GET',
-      signal:  AbortSignal.timeout(5000),
-    });
-    return res.ok;
-  } catch {
-    return false;
+  /* Perform the GET request */
+  const url = `${WEBHOOK_URL}?${params.toString()}`;
+
+  const response = await fetch(url, {
+    method: 'GET',
+    headers: { Accept: 'application/json, text/plain, */*' },
+  });
+
+  if (!response.ok) {
+    const errText = await response.text().catch(() => 'No response body');
+    throw new WebhookError(
+      `Webhook responded with ${response.status}: ${errText}`,
+      response.status
+    );
+  }
+
+  /* Parse response ------------------------------------------------- */
+  const rawText = await response.text();
+  const parsed  = tryParseJSON(rawText);
+
+  /* Normalise the reply text from various n8n output shapes */
+  const reply = extractReply(parsed, rawText);
+
+  return { reply, raw: parsed ?? rawText };
+};
+
+/* ── Extract a human-readable reply from the webhook response ─────── */
+const extractReply = (parsed, rawText) => {
+  if (!parsed) {
+    return rawText?.trim() || 'I received your message. How can I help you?';
+  }
+
+  /* Common n8n response shapes */
+  if (typeof parsed === 'string') return parsed;
+  if (parsed.reply)               return parsed.reply;
+  if (parsed.message)             return parsed.message;
+  if (parsed.response)            return parsed.response;
+  if (parsed.output)              return parsed.output;
+  if (parsed.text)                return parsed.text;
+  if (parsed.answer)              return parsed.answer;
+
+  /* Nested: { data: { reply } } */
+  if (parsed.data) return extractReply(parsed.data, rawText);
+
+  /* Array response */
+  if (Array.isArray(parsed) && parsed.length > 0) {
+    return extractReply(parsed[0], rawText);
+  }
+
+  return JSON.stringify(parsed);
+};
+
+/* ── Custom Error ────────────────────────────────────────────────── */
+export class WebhookError extends Error {
+  constructor(message, statusCode) {
+    super(message);
+    this.name       = 'WebhookError';
+    this.statusCode = statusCode;
   }
 }
