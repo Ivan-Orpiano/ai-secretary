@@ -46,5 +46,62 @@ export function useFileUpload() {
     });
   }, []);
 
- 
+  /* ── Clear all files ─────────────────────────────────────────── */
+  const clearFiles = useCallback(() => {
+    setFiles((prev) => { prev.forEach(revokePreview); return []; });
+    setFileErrors([]);
+  }, []);
+
+  /* ── Open the file picker ─────────────────────────────────────── */
+  const openPicker = useCallback(() => {
+    inputRef.current?.click();
+  }, []);
+
+  /* ── Drag handlers ────────────────────────────────────────────── */
+  const onDragEnter = useCallback((e) => {
+    e.preventDefault(); e.stopPropagation();
+    setDragActive(true);
+  }, []);
+
+  const onDragLeave = useCallback((e) => {
+    e.preventDefault(); e.stopPropagation();
+    /* Only deactivate if we're actually leaving the drop zone */
+    if (e.currentTarget.contains(e.relatedTarget)) return;
+    setDragActive(false);
+  }, []);
+
+  const onDragOver = useCallback((e) => {
+    e.preventDefault(); e.stopPropagation();
+  }, []);
+
+  const onDrop = useCallback((e) => {
+    e.preventDefault(); e.stopPropagation();
+    setDragActive(false);
+    if (e.dataTransfer.files?.length) addFiles(e.dataTransfer.files);
+  }, [addFiles]);
+
+  /* ── Input change handler ─────────────────────────────────────── */
+  const onInputChange = useCallback((e) => {
+    if (e.target.files?.length) addFiles(e.target.files);
+    /* Reset so same file can be re-selected */
+    e.target.value = '';
+  }, [addFiles]);
+
+  return {
+    files,
+    fileErrors,
+    dragActive,
+    inputRef,
+    addFiles,
+    removeFile,
+    clearFiles,
+    openPicker,
+    onDragEnter,
+    onDragLeave,
+    onDragOver,
+    onDrop,
+    onInputChange,
+    hasFiles: files.length > 0,
+    canAddMore: files.length < MAX_FILES_PER_MSG,
+  };
 }
