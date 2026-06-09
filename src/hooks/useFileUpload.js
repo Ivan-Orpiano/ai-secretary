@@ -1,39 +1,107 @@
-import { useCallback, useRef } from "react";
-import { useChatContext } from "../context/ChatContext";
-import { validateFiles } from "../utils/fileUtils";
+import { useState, useCallback, useRef } from 'react';
+import {
+  createFilePreview,
+  revokePreview,
+  validateFile,
+  MAX_FILES_PER_MSG,
+} from '../utils/fileUtils';
 
-
-
+/**
+ * useFileUpload – manages selected file state, validation,
+ * drag-and-drop, and cleanup.
+ */
 export function useFileUpload() {
-    const { files, addFiles, removeFile, clearFiles, setError} = useChatContext();
+  const [files, setFiles]         = useState([]); // FilePreview[]
+  const [dragActive, setDragActive] = useState(false);
+  const [fileErrors, setFileErrors] = useState([]);
+  const inputRef = useRef(null);
 
-    const fileInputRef=useRef(null);
+  /* ── Add files ───────────────────────────────────────────────── */
+  const addFiles = useCallback((rawFiles) => {
+    const incoming = Array.from(rawFiles);
+    const errors   = [];
+    const valid    = [];
 
-    const handleAddFiles = useCallback((fileList) => {
-        if(!fileList || fileList.length === 0) return;
+    for (const file of incoming) {
+      const { valid: ok, error } = validateFile(file);
+      if (!ok) { errors.push(`${file.name}: ${error}`); continue; }
+      valid.push(file);
+    }
 
-        const {valid, error} = validateFiles (fileList, files);
+    setFileErrors(errors);
 
-        if(errors.length > 0) {
-            setError(errors.join(' · '));
-        }
+    setFiles((prev) => {
+      const combined = [...prev, ...valid.map(createFilePreview)];
+      /* Enforce max cap */
+      return combined.slice(0, MAX_FILES_PER_MSG);
+    });
+  }, []);
 
-        if(valid.length > 0) {
-            addFiles(valid);
-        }
-    }, [files, addFiles, setError]);
+  /* ── Remove a single file ─────────────────────────────────────── */
+  const removeFile = useCallback((id) => {
+    setFiles((prev) => {
+      const target = prev.find((f) => f.id === id);
+      if (target) revokePreview(target);
+      return prev.filter((f) => f.id !== id);
+    });
+  }, []);
 
-    const openPicker = useCallback(() => {
-        fileInputRef.current?.click();
-    }, []);
+  /* ── Clear all files ─────────────────────────────────────────── */
+  const clearFiles = useCallback(() => {
+    setFiles((prev) => { prev.forEach(revokePreview); return []; });
+    setFileErrors([]);
+  }, []);
 
+  /* ── Open the file picker ─────────────────────────────────────── */
+  const openPicker = useCallback(() => {
+    inputRef.current?.click();
+  }, []);
 
-    return {
-        files, 
-        fileInputRef,
-        addFiles: handleAddFiles,
-        removeFile,
-        clearFiles,
-        openPicker,
-    };
+  /* ── Drag handlers ────────────────────────────────────────────── */
+  const onDragEnter = useCallback((e) => {
+    e.preventDefault(); e.stopPropagation();
+    setDragActive(true);
+  }, []);
+
+  const onDragLeave = useCallback((e) => {
+    e.preventDefault(); e.stopPropagation();
+    /* Only deactivate if we're actually leaving the drop zone */
+    if (e.currentTarget.contains(e.relatedTarget)) return;
+    setDragActive(false);
+  }, []);
+
+  const onDragOver = useCallback((e) => {
+    e.preventDefault(); e.stopPropagation();
+  }, []);
+
+  const onDrop = useCallback((e) => {
+    e.preventDefault(); e.stopPropagation();
+    setDragActive(false);
+    if (e.dataTransfer.files?.length) addFiles(e.dataTransfer.files);
+  }, [addFiles]);
+
+  /* ── Input change handler ─────────────────────────────────────── */
+  const onInputChange = useCallback((e) => {
+    if (e.target.files?.length) addFiles(e.target.files);
+    /* Reset so same file can be re-selected */
+    e.target.value = '';
+  }, [addFiles]);
+
+  return {
+    files,
+    fileErrors,
+    dragActive,
+    inputRef,
+    addFiles,
+    removeFile,
+    clearFiles,
+    openPicker,
+    onDragEnter,
+    onDragLeave,
+    onDragOver,
+    onDrop,
+    onInputChange,
+    hasFiles: files.length > 0,
+    canAddMore: files.length < MAX_FILES_PER_MSG,
+  };
 }
