@@ -62,3 +62,59 @@ const s = {
     fontSize: 10,
     color:    'var(--text-muted)',
   },
+
+  filesArea: {
+    marginTop:   10,
+    display:    'flex',
+    flexWrap:   'wrap',
+    gap:         8,
+  },
+
+  fileChip: (meta) => ({
+    display:        'flex',
+    alignItems:     'center',
+    gap:             6,
+    padding:        '6px 10px',
+    background:     `${meta.color}14`,
+    border:         `1px solid ${meta.color}30`,
+    borderRadius:    8,
+    cursor:         'default',
+  }),
+
+  fileIcon: {
+    fontSize: 16,
+    lineHeight: 1,
+  },
+
+  fileInfo: {
+    display:       'flex',
+    flexDirection: 'column',
+    gap:            1,
+  },
+
+  fileName: {
+    fontSize:  12,
+    fontWeight: 500,
+    color:     'var(--text-primary)',
+    maxWidth:   140,
+    overflow:  'hidden',
+    textOverflow: 'ellipsis',
+    whiteSpace: 'nowrap',
+    fontFamily: 'var(--font-body)',
+  },
+
+  fileMeta: {
+    fontSize: 10,
+    color:    'var(--text-muted)',
+    fontFamily: 'var(--font-body)',
+  },
+
+  imagePreview: {
+    width:        120,
+    height:        80,
+    objectFit:   'cover',
+    borderRadius:  8,
+    border:       '1px solid var(--border-mid)',
+    display:      'block',
+  },
+};
