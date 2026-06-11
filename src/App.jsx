@@ -336,3 +336,14 @@ function AppLayout() {
   );
 }
 
+/* ─────────────────────────────────────────────────────────────────── */
+/*  Root App with Provider                                              */
+/* ─────────────────────────────────────────────────────────────────── */
+export default function App() {
+  return (
+    <ChatProvider>
+      <AppLayout />
+    </ChatProvider>
+  );
+}
+
