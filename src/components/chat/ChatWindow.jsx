@@ -90,3 +90,41 @@ const s = {
   /* Scroll anchor */
   anchor: { height: 0, flexShrink: 0 },
 };
+
+/* ── Empty / welcome state ────────────────────────────────────────── */
+function WelcomeScreen({ onSuggestionClick }) {
+  return (
+    <div style={s.emptyWrapper}>
+      <div style={s.logo}>
+        <div style={s.logoGlyph}>✦</div>
+        <h1 style={s.logoTitle}>ARIA</h1>
+        <p style={s.logoSubtitle}>
+          Your AI Secretary — send a message or attach a file to get started.
+        </p>
+      </div>
+
+      <div style={s.suggestionsGrid}>
+        {SUGGESTIONS.map((text) => (
+          <button
+            key={text}
+            style={s.suggestionChip}
+            onClick={() => onSuggestionClick(text)}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.borderColor   = 'var(--accent)';
+              e.currentTarget.style.color         = 'var(--text-primary)';
+              e.currentTarget.style.background    = 'var(--accent-dim)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.borderColor   = 'var(--border-mid)';
+              e.currentTarget.style.color         = 'var(--text-secondary)';
+              e.currentTarget.style.background    = 'var(--bg-elevated)';
+            }}
+          >
+            {text}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
