@@ -113,3 +113,39 @@ const s = {
     fontFamily: 'var(--font-body)',
   },
 };
+
+/* ── Single file chip ────────────────────────────────────────────── */
+function FileChip({ fp, onRemove }) {
+  return (
+    <div style={s.chip(fp.meta)} title={fp.name}>
+      {fp.preview
+        ? <img src={fp.preview} alt={fp.name} style={s.imageThumb} />
+        : <span style={s.chipIcon}>{fp.meta.icon}</span>
+      }
+      <span style={s.chipName}>{fp.name}</span>
+      <span style={s.chipSize}>{fp.sizeStr}</span>
+      <button
+        style={s.removeBtn}
+        onClick={() => onRemove(fp.id)}
+        title="Remove file"
+        aria-label={`Remove ${fp.name}`}
+        onMouseEnter={(e) => { e.currentTarget.style.color = 'var(--error)'; }}
+        onMouseLeave={(e) => { e.currentTarget.style.color = 'var(--text-muted)'; }}
+      >
+        ✕
+      </button>
+    </div>
+  );
+}
+
+/* ── FileUpload ──────────────────────────────────────────────────── */
+export default function FileUpload({
+  files,
+  fileErrors,
+  dragActive,
+  inputRef,
+  onInputChange,
+  onDragLeave,
+  onDrop,
+  removeFile,
+})
