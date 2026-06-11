@@ -1,2 +1,115 @@
 import React from 'react';
 import { ACCEPT_STRING, MAX_FILES_PER_MSG } from '../../utils/fileUtils';
+
+/* ── Inline styles ─────────────────────────────────────────────────── */
+const s = {
+  /* Hidden native input */
+  input: { display: 'none' },
+
+  /* Drag-and-drop overlay zone (only shown when dragActive) */
+  dropOverlay: (active) => ({
+    position:        'fixed',
+    inset:            0,
+    background:      'rgba(61,255,192,0.06)',
+    backdropFilter:  'blur(4px)',
+    border:          '2px dashed var(--accent)',
+    borderRadius:     0,
+    zIndex:           100,
+    display:          active ? 'flex' : 'none',
+    alignItems:       'center',
+    justifyContent:   'center',
+    flexDirection:    'column',
+    gap:               12,
+    pointerEvents:    active ? 'all' : 'none',
+    transition:       'opacity 0.2s ease',
+  }),
+
+  dropLabel: {
+    fontFamily: 'var(--font-display)',
+    fontSize:    28,
+    fontWeight:  700,
+    color:       'var(--accent)',
+  },
+
+  dropSub: {
+    fontSize: 14,
+    color:    'var(--text-secondary)',
+    fontFamily: 'var(--font-body)',
+  },
+
+  /* File previews strip */
+  strip: {
+    display:    'flex',
+    flexWrap:   'wrap',
+    gap:         8,
+    padding:    '10px 16px 0',
+  },
+
+  chip: (meta) => ({
+    display:        'flex',
+    alignItems:     'center',
+    gap:             6,
+    padding:        '6px 10px 6px 8px',
+    background:     `${meta.color}18`,
+    border:         `1px solid ${meta.color}35`,
+    borderRadius:    20,
+    maxWidth:        180,
+    position:       'relative',
+  }),
+
+  chipIcon: { fontSize: 16, lineHeight: 1 },
+
+  chipName: {
+    fontSize:     12,
+    fontWeight:   500,
+    color:        'var(--text-primary)',
+    fontFamily:   'var(--font-body)',
+    overflow:     'hidden',
+    textOverflow: 'ellipsis',
+    whiteSpace:   'nowrap',
+    maxWidth:     100,
+  },
+
+  chipSize: {
+    fontSize:   10,
+    color:      'var(--text-muted)',
+    fontFamily: 'var(--font-body)',
+    flexShrink: 0,
+  },
+
+  removeBtn: {
+    background:  'none',
+    border:      'none',
+    cursor:      'pointer',
+    color:       'var(--text-muted)',
+    fontSize:     14,
+    lineHeight:   1,
+    padding:      '0 0 0 4px',
+    display:      'flex',
+    alignItems:   'center',
+    borderRadius: '50%',
+    transition:   'color 0.15s',
+    flexShrink:   0,
+  },
+
+  imageThumb: {
+    width:        32,
+    height:       32,
+    objectFit:   'cover',
+    borderRadius:  6,
+    flexShrink:    0,
+  },
+
+  errorArea: {
+    padding:    '6px 16px',
+    display:    'flex',
+    flexDirection: 'column',
+    gap:          3,
+  },
+
+  errorMsg: {
+    fontSize:   11.5,
+    color:      'var(--error)',
+    fontFamily: 'var(--font-body)',
+  },
+};
