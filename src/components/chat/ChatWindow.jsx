@@ -1,55 +1,130 @@
-import React, { useState, useCallback } from 'react';
-import { useChat }          from '../../hooks/useChat';
-import { useAutoScroll }    from '../../hooks/useAutoScroll';
-import { useChatContext }   from '../../context/ChatContext';
-import MessageBubble        from './MessageBubble';
-import TypingIndicator      from './TypingIndicator';
-import WelcomeScreen        from './WelcomeScreen';
+import React, { useEffect, useRef } from 'react';
+import MessageBubble   from './MessageBubble';
+import LoadingIndicator from '../ui/LoadingIndicator';
+import { SUGGESTIONS } from '../../utils/messageUtils';
 
-export default function ChatWindow() {
-  const { messages, isTyping, sendMessage } = useChat();
-  const { addMessage } = useChatContext();
+/* ── Inline styles ─────────────────────────────────────────────────── */
+const s = {
+  container: {
+    flex:           1,
+    overflowY:      'auto',
+    overflowX:      'hidden',
+    padding:        '24px 20px',
+    display:        'flex',
+    flexDirection:  'column',
+    gap:             8,
+    scrollBehavior: 'smooth',
+  },
 
-  // Scroll ref — triggers on message count or typing indicator change
-  const scrollRef = useAutoScroll([messages.length, isTyping]);
+  /* Empty / welcome state */
+  emptyWrapper: {
+    flex:           1,
+    display:        'flex',
+    flexDirection:  'column',
+    alignItems:     'center',
+    justifyContent: 'center',
+    gap:             32,
+    padding:        '40px 20px',
+    animation:      'fadeIn 0.6s ease both',
+  },
 
-  /**
-   * Called when user clicks a WelcomeScreen suggestion chip.
-   * Pre-fills the message and immediately sends it.
-   */
-  const handleSuggestion = useCallback((text) => {
-    sendMessage(text, []);
-  }, [sendMessage]);
+  logo: {
+    display:        'flex',
+    flexDirection:  'column',
+    alignItems:     'center',
+    gap:             12,
+  },
 
+  logoGlyph: {
+    width:          72,
+    height:         72,
+    borderRadius:   '50%',
+    background:     'linear-gradient(135deg, #3DFFC0 0%, #00B4D8 100%)',
+    display:        'flex',
+    alignItems:     'center',
+    justifyContent: 'center',
+    fontSize:        32,
+    boxShadow:      '0 0 40px rgba(61,255,192,0.25), 0 0 80px rgba(61,255,192,0.10)',
+    animation:      'glow 3s ease-in-out infinite',
+  },
+
+  logoTitle: {
+    fontFamily: 'var(--font-display)',
+    fontSize:    28,
+    fontWeight:  800,
+    color:       'var(--text-primary)',
+    letterSpacing: '-0.5px',
+  },
+
+  logoSubtitle: {
+    fontFamily: 'var(--font-body)',
+    fontSize:    14,
+    color:      'var(--text-secondary)',
+    textAlign:  'center',
+    maxWidth:    320,
+    lineHeight:  1.5,
+  },
+
+  suggestionsGrid: {
+    display:             'grid',
+    gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+    gap:                  10,
+    width:               '100%',
+    maxWidth:             640,
+  },
+
+  suggestionChip: {
+    padding:       '12px 16px',
+    background:    'var(--bg-elevated)',
+    border:        '1px solid var(--border-mid)',
+    borderRadius:   12,
+    cursor:        'pointer',
+    fontSize:       13,
+    color:         'var(--text-secondary)',
+    fontFamily:    'var(--font-body)',
+    textAlign:     'left',
+    lineHeight:     1.4,
+    transition:    'all 0.18s ease',
+  },
+
+  /* Scroll anchor */
+  anchor: { height: 0, flexShrink: 0 },
+};
+
+/* ── Empty / welcome state ────────────────────────────────────────── */
+function WelcomeScreen({ onSuggestionClick }) {
   return (
-    <main
-      ref={scrollRef}
-      id="chat-window"
-      aria-label="Conversation"
-      aria-live="polite"
-      aria-relevant="additions"
-      style={{
-        flex:       1,
-        overflowY:  'auto',
-        padding:    '16px 20px 8px',
-        display:    'flex',
-        flexDirection: 'column',
-      }}
-    >
-      {messages.length === 0 ? (
-        <WelcomeScreen onSelectSuggestion={handleSuggestion} />
-      ) : (
-        <>
-          {messages.map((msg) => (
-            <MessageBubble key={msg.id} message={msg} />
-          ))}
+    <div style={s.emptyWrapper}>
+      <div style={s.logo}>
+        <div style={s.logoGlyph}>✦</div>
+        <h1 style={s.logoTitle}>ARIA</h1>
+        <p style={s.logoSubtitle}>
+          Your AI Secretary — send a message or attach a file to get started.
+        </p>
+      </div>
 
-          {isTyping && <TypingIndicator />}
-
-          {/* Bottom anchor for auto-scroll */}
-          <div style={{ height: 1 }} aria-hidden="true" />
-        </>
-      )}
-    </main>
+      <div style={s.suggestionsGrid}>
+        {SUGGESTIONS.map((text) => (
+          <button
+            key={text}
+            style={s.suggestionChip}
+            onClick={() => onSuggestionClick(text)}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.borderColor   = 'var(--accent)';
+              e.currentTarget.style.color         = 'var(--text-primary)';
+              e.currentTarget.style.background    = 'var(--accent-dim)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.borderColor   = 'var(--border-mid)';
+              e.currentTarget.style.color         = 'var(--text-secondary)';
+              e.currentTarget.style.background    = 'var(--bg-elevated)';
+            }}
+          >
+            {text}
+          </button>
+        ))}
+      </div>
+    </div>
   );
 }
+
