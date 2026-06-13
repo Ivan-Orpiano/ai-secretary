@@ -46,3 +46,12 @@ body {
   overflow: hidden;
   height: 100dvh;
 }
+
+#root { height: 100dvh; display: flex; overflow: hidden; }
+
+::-webkit-scrollbar       { width: 3px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.08); border-radius: 2px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.16); }
+
+::selection { background: rgba(0,245,160,0.18); color: var(--acc); }
