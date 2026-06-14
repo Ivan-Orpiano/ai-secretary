@@ -31,7 +31,6 @@
   <img src="https://img.shields.io/badge/License-MIT-3DFFC0?style=for-the-badge&labelColor=0D1225" />
   <img src="https://img.shields.io/badge/Status-Active-3DFFC0?style=for-the-badge&labelColor=0D1225" />
   <img src="https://img.shields.io/badge/PRs-Welcome-FF6B6B?style=for-the-badge&labelColor=0D1225" />
-  <img src="https://img.shields.io/badge/Made%20with-❤️-FF6B6B?style=for-the-badge&labelColor=0D1225" />
 </p>
 
 </div>
@@ -317,13 +316,6 @@ This project is licensed under the **MIT License** — see the [LICENSE](LICENSE
 
 <br/><br/>
 
-<a href="https://github.com/your-username/aria-chatbot/stargazers">
-  <img src="https://img.shields.io/github/stars/your-username/aria-chatbot?style=social" />
-</a>
-&nbsp;
-<a href="https://github.com/your-username/aria-chatbot/network/members">
-  <img src="https://img.shields.io/github/forks/your-username/aria-chatbot?style=social" />
-</a>
 
 <br/><br/>
 
