@@ -263,28 +263,6 @@ Actions:
   CLEAR_CHAT  → reset conversation
 ```
 
----
-
-<!-- ═══════════════════════════════════════════════════════════════ -->
-<!--                         CUSTOMISATION                          -->
-<!-- ═══════════════════════════════════════════════════════════════ -->
-
-## 🎨 Customisation
-
-All design tokens live in `src/styles/globals.css`:
-
-```css
-:root {
-  --accent:       #3DFFC0;   /* ← change the neon mint to any color */
-  --user-accent:  #FF6B6B;   /* ← user bubble color                 */
-  --bg-base:      #080C18;   /* ← deepest background                 */
-  --font-display: 'Syne';    /* ← heading font                       */
-  --font-body:    'DM Sans'; /* ← body font                          */
-}
-```
-
----
-
 <!-- ═══════════════════════════════════════════════════════════════ -->
 <!--                           ROADMAP                              -->
 <!-- ═══════════════════════════════════════════════════════════════ -->
@@ -309,24 +287,6 @@ All design tokens live in `src/styles/globals.css`:
 <!--                         CONTRIBUTING                           -->
 <!-- ═══════════════════════════════════════════════════════════════ -->
 
-## 🤝 Contributing
-
-Contributions are warmly welcome!
-
-```bash
-# Fork → clone → branch
-git checkout -b feature/your-amazing-feature
-
-# Make changes, then commit
-git commit -m "feat: add your amazing feature"
-
-# Push & open a Pull Request
-git push origin feature/your-amazing-feature
-```
-
-Please follow the existing code style and keep components single-responsibility.
-
----
 
 <!-- ═══════════════════════════════════════════════════════════════ -->
 <!--                           LICENSE                              -->
