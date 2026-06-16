@@ -1,3 +1,10 @@
+/**
+ * TypingIndicator.jsx
+ *
+ * Animated three-dot indicator shown while the AI is generating a response.
+ * Uses ARIA live region so screen readers announce the state change.
+ */
+
 import React from 'react';
 import Avatar from '../ui/Avatar';
 
@@ -5,22 +12,23 @@ export default function TypingIndicator() {
   return (
     <div
       role="status"
-      aria-label="AI Secretary is typing"
+      aria-label="ARIA is typing"
+      aria-live="polite"
       style={{
         display:    'flex',
         gap:        10,
         alignItems: 'flex-end',
-        padding:    '4px 0',
-        animation:  'fadeSlideIn 0.22s ease-out',
+        padding:    '4px 0 12px',
+        animation:  'fadeSlideIn 0.22s ease-out both',
       }}
     >
-      <Avatar role="assistant" />
+      <Avatar role="assistant" size={28} />
 
       <div
         style={{
-          background:   'var(--bubble-ai)',
-          border:       '1px solid var(--border)',
-          borderRadius: '18px 18px 18px 4px',
+          background:   'var(--bg-card)',
+          border:       '1px solid var(--border-mid)',
+          borderRadius: '4px 18px 18px 18px',
           padding:      '13px 18px',
           display:      'flex',
           gap:          5,
@@ -38,7 +46,7 @@ export default function TypingIndicator() {
               borderRadius: '50%',
               background:   'var(--accent)',
               display:      'inline-block',
-              animation:    `bounce 1.2s ease-in-out ${i * 0.18}s infinite`,
+              animation:    `typingDot 1.4s ease-in-out ${i * 0.18}s infinite`,
             }}
           />
         ))}
