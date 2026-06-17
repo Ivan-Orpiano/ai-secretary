@@ -17,3 +17,11 @@ const NAV_ITEMS = [
   { to: '/email',     label: 'Email',    icon: MailIcon },
   { to: '/settings',  label: 'Settings', icon: SettingsIcon },
 ];
+
+/**
+ * @param {{
+ *   open:          boolean,   // desktop collapsed/expanded state
+ *   mobileOpen:    boolean,   // mobile drawer state
+ *   onCloseMobile: () => void,
+ * }} props
+ */
