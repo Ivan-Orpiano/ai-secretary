@@ -23,7 +23,7 @@ function FormattedText({ text }) {
         if (/^[•\-*]\s/.test(line)) {
           return (
             <div key={i} style={{ display: 'flex', gap: 9, marginTop: 2 }}>
-              <span style={{ color: 'var(--accent)', flexShrink: 0, marginTop: 2, fontSize: 10 }}>◆</span>
+              <span style={{ color: 'var(--accent)', flexShrink: 0, marginTop: 3, fontSize: 9 }}>◆</span>
               <span
                 style={{ lineHeight: 1.65 }}
                 dangerouslySetInnerHTML={{ __html: render(line.replace(/^[•\-*]\s/, '')) }}
@@ -37,9 +37,11 @@ function FormattedText({ text }) {
           return (
             <div key={i} style={{ display: 'flex', gap: 9, marginTop: 2 }}>
               <span style={{
-                color: 'var(--accent)', flexShrink: 0,
-                fontFamily: 'var(--font-mono)', fontSize: 11,
-                marginTop: 2,
+                color:      'var(--accent)',
+                flexShrink:  0,
+                fontFamily: 'var(--font-mono)',
+                fontSize:    11,
+                marginTop:   2,
               }}>
                 {num}.
               </span>
@@ -83,21 +85,21 @@ function FileChip({ fp }) {
 
   return (
     <div style={{
-      display:    'flex',
-      alignItems: 'center',
-      gap:         7,
-      padding:    '6px 11px',
-      background: `${meta.color}10`,
-      border:     `1px solid ${meta.color}22`,
-      borderRadius: 9,
+      display:      'flex',
+      alignItems:   'center',
+      gap:           7,
+      padding:      '6px 12px',
+      background:   `${meta.color}0D`,
+      border:       `1px solid ${meta.color}22`,
+      borderRadius:  10,
     }}>
       <span style={{ fontSize: 15, lineHeight: 1 }}>{meta.icon}</span>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
         <span style={{
           fontSize:     11.5,
-          fontWeight:   500,
+          fontWeight:    500,
           color:        'var(--text-primary)',
-          maxWidth:     130,
+          maxWidth:      130,
           overflow:     'hidden',
           textOverflow: 'ellipsis',
           whiteSpace:   'nowrap',
@@ -117,7 +119,7 @@ function StatusIcon({ status }) {
     return <span style={{ fontSize: 10, color: 'var(--text-muted)', letterSpacing: 1 }}>···</span>;
   }
   if (status === 'sent') {
-    return <span style={{ fontSize: 10, color: 'var(--accent)' }}>✓</span>;
+    return <span style={{ fontSize: 10, color: 'var(--accent)', opacity: 0.8 }}>✓✓</span>;
   }
   return null;
 }
@@ -143,10 +145,8 @@ export default function MessageBubble({ message }) {
     <div
       aria-label={`${isUser ? 'You' : 'ARIA'} at ${time}: ${message.content}`}
       style={{
-        marginBottom: 18,
-        animation: isUser
-          ? 'springUp 0.40s cubic-bezier(0.34,1.56,0.64,1) both'
-          : 'springUp 0.40s cubic-bezier(0.34,1.56,0.64,1) both',
+        marginBottom: 20,
+        animation:    'springUp 0.42s cubic-bezier(0.34,1.56,0.64,1) both',
       }}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
@@ -160,35 +160,86 @@ export default function MessageBubble({ message }) {
         <Avatar role={isUser ? 'user' : 'assistant'} size={32} />
 
         {/* Bubble */}
-        <div style={{ maxWidth: 'min(72%, 640px)', position: 'relative' }}>
+        <div style={{ maxWidth: 'min(72%, 660px)', position: 'relative' }}>
+
+          {/* Floating copy pill */}
+          {!isError && (
+            <button
+              onClick={handleCopy}
+              aria-label="Copy message"
+              style={{
+                position:      'absolute',
+                top:           -30,
+                [isUser ? 'right' : 'left']: 0,
+                display:       'flex',
+                alignItems:    'center',
+                gap:            4,
+                background:    'var(--bg-elevated)',
+                border:        `1px solid ${copied ? 'rgba(0,245,160,0.35)' : 'var(--border-mid)'}`,
+                borderRadius:  'var(--radius-full)',
+                cursor:        'pointer',
+                color:          copied ? 'var(--accent)' : 'var(--text-secondary)',
+                fontSize:       10,
+                padding:       '3px 10px',
+                fontFamily:    'var(--font-mono)',
+                transition:    'all 0.15s ease',
+                whiteSpace:    'nowrap',
+                opacity:        hovered ? 1 : 0,
+                pointerEvents:  hovered ? 'auto' : 'none',
+                transform:      hovered ? 'translateY(0)' : 'translateY(4px)',
+                boxShadow:     'var(--shadow-sm)',
+              }}
+            >
+              {copied ? '✓ Copied' : '⎘ Copy'}
+            </button>
+          )}
+
           <div style={{
-            padding:       '12px 16px',
-            borderRadius:  isUser ? '18px 5px 18px 18px' : '5px 18px 18px 18px',
+            padding:      isUser ? '12px 16px' : '14px 17px',
+            borderRadius:  isUser
+              ? '18px 5px 18px 18px'
+              : '5px 18px 18px 18px',
             background:    isError
               ? 'rgba(255, 77, 106, 0.07)'
               : isUser
-                ? 'rgba(255,107,157,0.10)'
-                : 'rgba(11,16,32,0.80)',
-            backdropFilter: isUser ? undefined : 'blur(12px)',
-            WebkitBackdropFilter: isUser ? undefined : 'blur(12px)',
-            border:        isError
+                ? 'linear-gradient(135deg, rgba(255,107,157,0.12) 0%, rgba(200,80,130,0.07) 100%)'
+                : 'rgba(8,14,34,0.82)',
+            backdropFilter:      (!isUser && !isError) ? 'blur(16px)' : undefined,
+            WebkitBackdropFilter: (!isUser && !isError) ? 'blur(16px)' : undefined,
+            border:         isError
               ? '1px solid rgba(255,77,106,0.30)'
               : isUser
-                ? '1px solid rgba(255,107,157,0.22)'
+                ? '1px solid rgba(255,107,157,0.20)'
                 : '1px solid var(--border-glass)',
-            borderLeft:    (!isUser && !isError)
-              ? '2px solid rgba(0,245,160,0.28)'
+            borderLeft:     (!isUser && !isError)
+              ? '2px solid transparent'
               : undefined,
-            boxShadow:     isUser
+            backgroundClip: (!isUser && !isError) ? 'padding-box' : undefined,
+            boxShadow:       isUser
               ? 'var(--shadow-user)'
               : isError
-                ? '0 2px 10px rgba(255,77,106,0.12)'
+                ? '0 2px 12px rgba(255,77,106,0.14)'
                 : 'var(--shadow-ai)',
-            fontSize:   13.5,
-            lineHeight:  1.65,
-            color:      'var(--text-primary)',
-            fontFamily: 'var(--font-body)',
+            fontSize:    14,
+            lineHeight:   1.65,
+            color:       'var(--text-primary)',
+            fontFamily:  'var(--font-body)',
+            position:    'relative',
           }}>
+            {/* AI left accent bar via pseudo-like inner div */}
+            {!isUser && !isError && (
+              <div style={{
+                position:     'absolute',
+                left:          0,
+                top:          '12%',
+                height:       '76%',
+                width:          2,
+                borderRadius: '0 2px 2px 0',
+                background:   'linear-gradient(180deg, var(--accent) 0%, var(--accent-blue) 100%)',
+                opacity:       0.45,
+              }} />
+            )}
+
             {/* Content */}
             {message.content && (
               isUser
@@ -206,18 +257,19 @@ export default function MessageBubble({ message }) {
                 marginLeft:     3,
                 verticalAlign: 'text-bottom',
                 animation:     'blink 0.75s ease-in-out infinite',
+                borderRadius:   1,
               }} />
             )}
 
             {/* File attachments */}
             {message.files?.length > 0 && (
               <div style={{
-                display:   'flex',
-                flexWrap:  'wrap',
-                gap:        7,
-                marginTop:  10,
-                paddingTop: 10,
-                borderTop: '1px solid var(--border-subtle)',
+                display:    'flex',
+                flexWrap:   'wrap',
+                gap:         7,
+                marginTop:   10,
+                paddingTop:  10,
+                borderTop:  '1px solid var(--border-subtle)',
               }}>
                 {message.files.map((fp) => (
                   <FileChip key={fp.id} fp={fp} />
@@ -231,52 +283,21 @@ export default function MessageBubble({ message }) {
               alignItems:     'center',
               gap:             5,
               marginTop:       8,
-              paddingTop:      6,
-              borderTop:      '1px solid var(--border-subtle)',
+              paddingTop:      7,
+              borderTop:      '1px solid rgba(255,255,255,0.04)',
               justifyContent: isUser ? 'flex-end' : 'flex-start',
             }}>
               <span style={{
-                fontSize:   10,
-                color:      'var(--text-hint)',
-                fontFamily: 'var(--font-mono)',
-                letterSpacing: '0.02em',
+                fontSize:      10,
+                color:        'var(--text-hint)',
+                fontFamily:   'var(--font-mono)',
+                letterSpacing: '0.03em',
               }}>
                 {time}
               </span>
               {isUser && <StatusIcon status={message.status} />}
             </div>
           </div>
-
-          {/* Floating copy pill */}
-          {!isError && (
-            <button
-              onClick={handleCopy}
-              aria-label="Copy message"
-              style={{
-                position:     'absolute',
-                top:          -28,
-                [isUser ? 'right' : 'left']: 0,
-                display:      'flex',
-                alignItems:   'center',
-                gap:           4,
-                background:   'var(--bg-elevated)',
-                border:       '1px solid var(--border-mid)',
-                borderRadius: 'var(--radius-full)',
-                cursor:       'pointer',
-                color:        copied ? 'var(--accent)' : 'var(--text-muted)',
-                fontSize:      10,
-                padding:      '3px 10px',
-                fontFamily:   'var(--font-mono)',
-                transition:   'all var(--transition-base)',
-                whiteSpace:   'nowrap',
-                opacity:       hovered ? 1 : 0,
-                pointerEvents: hovered ? 'auto' : 'none',
-                boxShadow:    'var(--shadow-sm)',
-              }}
-            >
-              {copied ? '✓ Copied' : '⎘ Copy'}
-            </button>
-          )}
         </div>
       </div>
     </div>
