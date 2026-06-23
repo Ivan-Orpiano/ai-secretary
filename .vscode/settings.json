@@ -1,0 +1,5 @@
+{
+  "files.exclude": {
+    "**/pyvenv.cfg": true
+  }
+}
