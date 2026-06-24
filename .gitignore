@@ -22,8 +22,17 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
+
+.package-lock.json
+.package.json
+
 #Python | OpenAI| LangChain
-.pyenv.cfg
+# Ignore Python virtual environment
+backend/venv/
 .env
 /scripts
 /include
+
+#Supabase Secrets
+supabase/
+
