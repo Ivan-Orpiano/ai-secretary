@@ -61,8 +61,8 @@ export function ChatProvider({ children }) {
       if (err.name === 'AbortError') return;
 
       const errorContent = err.message?.includes('Failed to fetch')
-        ? '⚠️ Network error — check your connection and try again.'
-        : `⚠️ ${err.message ?? 'An unexpected error occurred.'}`;
+        ? 'Network error — check your connection and try again.'
+        : `${err.message ?? 'An unexpected error occurred.'}`;
 
       setError(errorContent);
 
@@ -120,4 +120,4 @@ export function useChatContext() {
     throw new Error('useChatContext must be called inside <ChatProvider>.');
   }
   return ctx;
-}
+}src/components
