@@ -113,3 +113,15 @@ class OpenAIClient:
         
 def _wrap_error(exc: Exception) -> LLMError:
     """Wraps an exception from the OpenAI client into an LLMError."""
+    if isinstance (exc, APITimeoutError):
+        return LLMError("LLM request timed out.", retryable= True)
+    if isinstance (exc, RateLimitError):
+        return LLMError("LLM Rate Limit Exceeded.", retryable=True, status_code = 429)
+    if isinstance (exc, APIConnectionError):
+        return LLMError(f"Could not connect to LLM Provider: {exc}", retryable = True)
+    if isinstance (exc, APIStatusError):
+        code = exc.status_code
+        return LLMError(f"LLM provider returned HTTP {code}.", retryable = code >= 500, status_code=code)
+    if isinstance(exc, APIError):
+        return LLMError(f"LLM provider error: {exc}")
+    return LLMError(f"Unexpected LLM client error: {exc}")
